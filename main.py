@@ -26,6 +26,13 @@ class DIR:
         SOUTH: (0, 1),
     }
 
+    to_out = {
+        WEST: 'LEFT',
+        EAST: 'RIGHT',
+        NORTH: 'UP',
+        SOUTH: 'DOWN'
+    }
+
 
 class Node:
     def __init__(self, position):
@@ -57,6 +64,9 @@ class Node:
         del self.siblings[other]
         other.disconnect_label(label)
 
+    def has_connection(self, label):
+        return label in self.labels
+
     def __str__(self):
         return "N(%s,%s)" % self.position
 
@@ -81,13 +91,47 @@ class Grid:
                         this_node.connect_to(sibling_node, direction)
 
     def register_west_wall(self, position):
+        x, y = position
         self.nodes[position].disconnect_label(DIR.WEST)
+        self.nodes[(x, y+1)].disconnect_label(DIR.WEST)
 
     def register_north_wall(self, position):
+        x, y = position
         self.nodes[position].disconnect_label(DIR.NORTH)
+        self.nodes[(x+1, y)].disconnect_label(DIR.NORTH)
 
     def can_pass(self, position, direction):
         return direction in self.nodes[position].labels
+
+    def is_free(self, direction, *positions):
+        for position in positions:
+            if position not in self.nodes:
+                return False
+            if not self.nodes[position].has_connection(direction):
+                return False
+        return True
+
+    def can_build_north_wall(self, position):
+        x, y = position
+        return self.is_free(DIR.NORTH, (x, y), (x+1, y))
+
+    def can_build_west_wall(self, position):
+        x, y = position
+        return self.is_free(DIR.WEST, (x, y), (x, y+1))
+
+    def possible_block(self, position, direction):
+        x, y = position
+        if direction == DIR.EAST:
+            if self.can_build_west_wall((x+1, y)):
+                return (x+1, y), CONSTS.WALL_ORIENTATION_VERTICAL
+            if self.can_build_west_wall((x+1, y-1)):
+                return (x+1, y-1), CONSTS.WALL_ORIENTATION_VERTICAL
+        if direction == DIR.WEST:
+            if self.can_build_west_wall((x, y)):
+                return (x, y), CONSTS.WALL_ORIENTATION_VERTICAL
+            if self.can_build_west_wall((x, y-1)):
+                return (x, y-1), CONSTS.WALL_ORIENTATION_VERTICAL
+        return None
 
 
 class ScoreGrid:
@@ -154,9 +198,33 @@ class Arena:
         else:
             raise NotImplemented
 
+    def player_move(self, player):
+        scoregrid = ScoreGrid(self.grid, player.goal)
+        node = self.grid.nodes[(player.x, player.y)]
+        options = [(direction, scoregrid.distances[sibling.position]) for (sibling, direction) in node.siblings.items()]
+        options.sort(key=lambda pair: pair[1])
+        return options[0]
+
     def decide(self):
-        score_grids = [ScoreGrid(self.grid, player.goal) for player in self.players]
-        return "RIGHT"
+        my_id, yo_id = self.my_id, 1 - self.my_id
+        me = self.players[my_id]
+        yo = self.players[yo_id]
+        my_move, my_dist = self.player_move(self.players[my_id])
+        yo_move, yo_dist = self.player_move(self.players[yo_id])
+
+        need_no_wall = my_dist < yo_dist or (my_dist == yo_dist and my_id < yo_id)
+        need_wall = not need_no_wall
+        if need_wall and me.walls_left > 0:
+            ex, ey = yo.x, yo.y
+            block = self.grid.possible_block((ex, ey), yo_move)
+            if block is not None:
+                wall_pos, wall_orientation = block
+                wx, wy = wall_pos
+                return "%s %s %s" % (wx, wy, wall_orientation)
+
+        return DIR.to_out[my_move]
+
+
 
 
 def main():

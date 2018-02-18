@@ -43,3 +43,20 @@ class GridTestCase(unittest.TestCase):
         grid.register_north_wall((3, 2))
         self.assertFalse(grid.can_pass((3, 1), DIR.SOUTH))
         self.assertFalse(grid.can_pass((3, 2), DIR.NORTH))
+
+    def test_wallbuilding(self):
+        grid = Grid(7, 5)
+        grid.register_west_wall((2, 3))
+        grid.register_west_wall((2, 4))
+        node14 = grid.nodes[(1, 4)]
+        node24 = grid.nodes[(2, 4)]
+        self.assertNotIn(node24, node14.siblings)
+
+
+    def test_can_build_west_wall(self):
+        grid = Grid(7, 5)
+        self.assertTrue(grid.can_build_west_wall((2, 2)))
+
+    def test_is_free(self):
+        grid = Grid(7, 5)
+        self.assertTrue(grid.is_free(DIR.WEST), (2, 2))
