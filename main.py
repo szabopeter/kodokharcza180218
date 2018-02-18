@@ -28,10 +28,10 @@ class DIR:
 
 
 class Node:
-    def __init__(self, y, x):
+    def __init__(self, position):
         self.siblings = {}
         self.labels = {}
-        self.y, self.x = y, x
+        self.position = position
 
     def connect_to(self, other, label="?"):
         if other not in self.siblings:
@@ -57,13 +57,19 @@ class Node:
         del self.siblings[other]
         other.disconnect_label(label)
 
+    def __str__(self):
+        return "N(%s,%s)" % self.position
+
+    def __repr__(self):
+        return str(self)
+
 
 class Grid:
     def __init__(self, w, h):
         self.nodes = {}
         for y in range(h):
             for x in range(w):
-                self.nodes[(x, y)] = (Node(y, x))
+                self.nodes[(x, y)] = Node((x, y))
 
         for y in range(h):
             for x in range(w):
@@ -84,20 +90,55 @@ class Grid:
         return direction in self.nodes[position].labels
 
 
+class ScoreGrid:
+    def __init__(self, grid, goal):
+        self.distances = {}
+        queue = [node for node_id, node in grid.nodes.items() if goal(node_id)]
+        processed = queue[:]
+        for node in queue:
+            self.distances[node.position] = 0
+
+        while queue:
+            node = queue.pop(0)
+            for sibling in node.siblings:
+                if sibling in processed:
+                    continue
+                if sibling.position in self.distances:
+                    continue
+                self.distances[sibling.position] = self.distances[node.position] + 1
+                queue.append(sibling)
+            processed.append(node)
+
+    def get_distance_at_xy(self, position):
+        if position not in self.distances:
+            return "?"
+        return self.distances[position]
+
+
 class Player:
-    def __init__(self, player_id):
+    def __init__(self, player_id, goal):
         self.player_id = player_id
         self.x, self.y = None, None
         self.walls_left = 9999
+        self.goal = goal
 
 
 class Arena:
     def __init__(self, w, h, player_count, my_id):
+        def goal0(node_position):
+            x, y = node_position
+            return x == w-1
+
+        def goal1(node_position):
+            x, y = node_position
+            return x == 0
+
         self.w, self.h = w, h
         if player_count >= 3:
             print("KODOK HARCZA")
         self.player_count = 2
-        self.players = [Player(i) for i in range(self.player_count)]
+        goals = [goal0, goal1]
+        self.players = [Player(i, goals[i]) for i in range(self.player_count)]
         self.my_id = my_id
         self.grid = Grid(w, h)
 
@@ -112,6 +153,10 @@ class Arena:
             self.grid.register_north_wall((x, y))
         else:
             raise NotImplemented
+
+    def decide(self):
+        score_grids = [ScoreGrid(self.grid, player.goal) for player in self.players]
+        return "RIGHT"
 
 
 def main():
@@ -145,7 +190,7 @@ def main():
             arena.register_wall(wall_x, wall_y, wall_orientation)
 
         # action: LEFT, RIGHT, UP, DOWN or "putX putY putOrientation" to place a wall
-        print("RIGHT")
+        print(arena.decide())
 
 
 if __name__ == '__main__':

@@ -15,8 +15,8 @@ class GridTestCase(unittest.TestCase):
             self.assertLessEqual(len(node.siblings), 4)
 
     def test_connect_nodes(self):
-        n1 = Node(1, 1)
-        n2 = Node(2, 2)
+        n1 = Node((1, 1))
+        n2 = Node((2, 2))
         n1.connect_to(n2, 'E')
         self.assertIn('E', n1.labels)
         self.assertEqual(n1.labels['E'], n2)
@@ -28,8 +28,8 @@ class GridTestCase(unittest.TestCase):
         n2.connect_to(n1, 'W')
 
     def test_disconnect_nodes(self):
-        n1 = Node(1, 1)
-        n2 = Node(2, 2)
+        n1 = Node((1, 1))
+        n2 = Node((2, 2))
         n1.connect_to(n2, 'E')
         n2.connect_to(n1, 'W')
         n1.disconnect_label('E')
