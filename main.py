@@ -1,11 +1,16 @@
 import sys
-import math
+# import math
 
 
 def log(msg):
     # Write an action using print
     # To debug: print("Debug messages...", file=sys.stderr)
     print(msg, file=sys.stderr)
+
+
+class CONSTS:
+    WALL_ORIENTATION_VERTICAL = 'V'
+    WALL_ORIENTATION_HORIZONTAL = 'H'
 
 
 class DIR:
@@ -34,6 +39,24 @@ class Node:
 
         self.labels[label] = other
 
+    def disconnect_label(self, label):
+        if label not in self.labels:
+            return
+
+        other = self.labels[label]
+        del self.labels[label]
+        del self.siblings[other]
+        other.disconnect_sibling(self)
+
+    def disconnect_sibling(self, other):
+        if other not in self.siblings:
+            return
+
+        label = self.siblings[other]
+        del self.labels[label]
+        del self.siblings[other]
+        other.disconnect_label(label)
+
 
 class Grid:
     def __init__(self, w, h):
@@ -49,7 +72,23 @@ class Grid:
                     nx, ny = x + xofs, y + yofs
                     if (nx, ny) in self.nodes:
                         sibling_node = self.nodes[(nx, ny)]
-                        this_node.connect_to(sibling_node)
+                        this_node.connect_to(sibling_node, direction)
+
+    def register_west_wall(self, position):
+        self.nodes[position].disconnect_label(DIR.WEST)
+
+    def register_north_wall(self, position):
+        self.nodes[position].disconnect_label(DIR.NORTH)
+
+    def can_pass(self, position, direction):
+        return direction in self.nodes[position].labels
+
+
+class Player:
+    def __init__(self, player_id):
+        self.player_id = player_id
+        self.x, self.y = None, None
+        self.walls_left = 9999
 
 
 class Arena:
@@ -58,10 +97,21 @@ class Arena:
         if player_count >= 3:
             print("KODOK HARCZA")
         self.player_count = 2
+        self.players = [Player(i) for i in range(self.player_count)]
         self.my_id = my_id
         self.grid = Grid(w, h)
 
+    def update_player(self, player_id, x, y, walls_left):
+        player = self.players[player_id]
+        player.x, player.y, player.walls_left = x, y, walls_left
 
+    def register_wall(self, x, y, orientation):
+        if orientation == CONSTS.WALL_ORIENTATION_VERTICAL:
+            self.grid.register_west_wall((x, y))
+        elif orientation == CONSTS.WALL_ORIENTATION_HORIZONTAL:
+            self.grid.register_north_wall((x, y))
+        else:
+            raise NotImplemented
 
 
 def main():
@@ -82,6 +132,8 @@ def main():
             # y: y-coordinate of the player
             # walls_left: number of walls available for the player
             x, y, walls_left = [int(j) for j in input().split()]
+            arena.update_player(i, x, y, walls_left)
+
         wall_count = int(input())  # number of walls on the board
         for i in range(wall_count):
             # wall_x: x-coordinate of the wall
@@ -90,6 +142,7 @@ def main():
             wall_x, wall_y, wall_orientation = input().split()
             wall_x = int(wall_x)
             wall_y = int(wall_y)
+            arena.register_wall(wall_x, wall_y, wall_orientation)
 
         # action: LEFT, RIGHT, UP, DOWN or "putX putY putOrientation" to place a wall
         print("RIGHT")
