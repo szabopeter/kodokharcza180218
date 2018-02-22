@@ -202,7 +202,8 @@ class Arena:
     def player_move(self, player):
         scoregrid = ScoreGrid(self.grid, player.goal)
         node = self.grid.nodes[(player.x, player.y)]
-        options = [(direction, scoregrid.get_distance_at_xy(sibling.position)) for (sibling, direction) in node.siblings.items()]
+        options = [(direction, scoregrid.get_distance_at_xy(sibling.position))
+                   for (sibling, direction) in node.siblings.items()]
         options.sort(key=lambda pair: pair[1])
         return options[0]
 
@@ -224,8 +225,6 @@ class Arena:
                 return "%s %s %s" % (wx, wy, wall_orientation)
 
         return DIR.to_out[my_move]
-
-
 
 
 def main():

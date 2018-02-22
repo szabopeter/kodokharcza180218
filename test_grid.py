@@ -52,7 +52,6 @@ class GridTestCase(unittest.TestCase):
         node24 = grid.nodes[(2, 4)]
         self.assertNotIn(node24, node14.siblings)
 
-
     def test_can_build_west_wall(self):
         grid = Grid(7, 5)
         self.assertTrue(grid.can_build_west_wall((2, 2)))
