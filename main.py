@@ -155,7 +155,8 @@ class ScoreGrid:
 
     def get_distance_at_xy(self, position):
         if position not in self.distances:
-            return "?"
+            log('WTF: %s not in %s' % (position, list(self.distances.keys())))
+            return 12
         return self.distances[position]
 
 
@@ -201,7 +202,7 @@ class Arena:
     def player_move(self, player):
         scoregrid = ScoreGrid(self.grid, player.goal)
         node = self.grid.nodes[(player.x, player.y)]
-        options = [(direction, scoregrid.distances[sibling.position]) for (sibling, direction) in node.siblings.items()]
+        options = [(direction, scoregrid.get_distance_at_xy(sibling.position)) for (sibling, direction) in node.siblings.items()]
         options.sort(key=lambda pair: pair[1])
         return options[0]
 
@@ -256,6 +257,7 @@ def main():
             wall_x = int(wall_x)
             wall_y = int(wall_y)
             arena.register_wall(wall_x, wall_y, wall_orientation)
+            log("Wall %s at %s, %s" % (wall_orientation, wall_x, wall_y))
 
         # action: LEFT, RIGHT, UP, DOWN or "putX putY putOrientation" to place a wall
         print(arena.decide())
