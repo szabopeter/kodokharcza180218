@@ -20,10 +20,15 @@ class ScoreGridTestCase(unittest.TestCase):
     def test_creation(self):
         arena = Arena(7, 5, 2, 0)
         score_grid = ScoreGrid(arena.grid, arena.players[0].goal)
-        a_start_node = arena.grid.nodes[(0, 2)]
-        an_end_node = arena.grid.nodes[(6, 3)]
+        a_start_node = arena.grid.nodes[(0, 1)]
+        an_end_node = arena.grid.nodes[(6, 1)]
 #        for y in range(5):
 #            line = [str(score_grid.get_distance_at_xy((x, y))) for x in range(7)]
 #            print("\t".join(line))
         self.assertEqual(score_grid.distances[a_start_node.position], 6)
         self.assertEqual(score_grid.distances[an_end_node.position], 0)
+
+        arena.grid.register_west_wall((5, 0))
+        score_grid = ScoreGrid(arena.grid, arena.players[0].goal)
+        self.assertEqual(score_grid.distances[a_start_node.position], 7)
+        self.assertEqual(score_grid.distances[(0, 0)], 8)
