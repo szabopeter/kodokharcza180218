@@ -67,6 +67,9 @@ class Node:
     def has_connection(self, label):
         return label in self.labels
 
+    def is_connected(self, other):
+        return other in self.siblings
+
     def __str__(self):
         return "N(%s,%s)" % self.position
 
@@ -90,15 +93,15 @@ class Grid:
                         sibling_node = self.nodes[(nx, ny)]
                         this_node.connect_to(sibling_node, direction)
 
-    def register_west_wall(self, position):
+    def register_west_wall(self, position, size=2):
         x, y = position
-        self.nodes[position].disconnect_label(DIR.WEST)
-        self.nodes[(x, y+1)].disconnect_label(DIR.WEST)
+        for i in range(size):
+            self.nodes[(x, y+i)].disconnect_label(DIR.WEST)
 
-    def register_north_wall(self, position):
+    def register_north_wall(self, position, size=2):
         x, y = position
-        self.nodes[position].disconnect_label(DIR.NORTH)
-        self.nodes[(x+1, y)].disconnect_label(DIR.NORTH)
+        for i in range(size):
+            self.nodes[(x+i, y)].disconnect_label(DIR.NORTH)
 
     def can_pass(self, position, direction):
         return direction in self.nodes[position].labels

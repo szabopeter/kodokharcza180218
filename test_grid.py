@@ -46,16 +46,26 @@ class GridTestCase(unittest.TestCase):
 
     def test_wallbuilding(self):
         grid = Grid(7, 5)
-        grid.register_west_wall((2, 3))
-        grid.register_west_wall((2, 4))
         node14 = grid.nodes[(1, 4)]
         node24 = grid.nodes[(2, 4)]
-        self.assertNotIn(node24, node14.siblings)
+        self.assertTrue(node24.is_connected(node14))
+        self.assertTrue(node14.is_connected(node24))
+
+        grid.register_west_wall((2, 3))
+
+        self.assertFalse(node24.is_connected(node14))
+        self.assertFalse(node14.is_connected(node24))
 
     def test_can_build_west_wall(self):
         grid = Grid(7, 5)
         self.assertTrue(grid.can_build_west_wall((2, 2)))
+        grid.register_west_wall((2,1))
+        self.assertFalse(grid.can_build_west_wall((2, 2)))
 
     def test_is_free(self):
         grid = Grid(7, 5)
-        self.assertTrue(grid.is_free(DIR.WEST), (2, 2))
+        self.assertTrue(grid.is_free(DIR.WEST, (2, 1), (2, 2)))
+        grid.register_west_wall((2, 1))
+        self.assertFalse(grid.is_free(DIR.WEST, (2, 1), (2, 2)))
+        self.assertFalse(grid.is_free(DIR.WEST, (2, 2)))
+        self.assertTrue(grid.is_free(DIR.WEST, (2, 3)))
