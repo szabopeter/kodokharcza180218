@@ -9,6 +9,7 @@ def log(msg):
 
 
 class CONSTS:
+    WALL_SIZE = 2
     WALL_ORIENTATION_VERTICAL = 'V'
     WALL_ORIENTATION_HORIZONTAL = 'H'
 
@@ -33,6 +34,22 @@ class DIR:
         SOUTH: 'DOWN'
     }
 
+
+class Wall:
+    def __init__(self, position, orientation, size=CONSTS.WALL_SIZE):
+        self.x, self.y = position
+        self.orientation = orientation
+        self.size = size
+
+    def signature(self):
+        return self.x, self.y, self.orientation, self.size
+
+    def __eq__(self, other):
+        return self.signature() == other.signature()
+
+    def prevents(self):
+        # TODO: return list of walls that are made impossible by this one
+        pass
 
 class Node:
     def __init__(self, position):
@@ -80,6 +97,7 @@ class Node:
 class Grid:
     def __init__(self, w, h):
         self.nodes = {}
+        self.w, self.h = w, h
         for y in range(h):
             for x in range(w):
                 self.nodes[(x, y)] = Node((x, y))
@@ -135,6 +153,17 @@ class Grid:
             if self.can_build_west_wall((x, y-1)):
                 return (x, y-1), CONSTS.WALL_ORIENTATION_VERTICAL
         return None
+
+    def all_possible_walls(self):
+        # TODO optimization: keep track of available options
+        # instead of recalculating them all the time
+        result = {}
+        for y in range(self.h):
+            for x in range(self.w):
+                if self.can_build_west_wall((x, y)):
+                    result.append(((x, y), CONSTS.WALL_ORIENTATION_VERTICAL))
+                if self.can_build_north_wall((x, y)):
+                    result.append((x, y), CONSTS.WALL_ORIENTATION_HORIZONTAL)
 
 
 class ScoreGrid:
@@ -195,6 +224,7 @@ class Arena:
         player.x, player.y, player.walls_left = x, y, walls_left
 
     def register_wall(self, x, y, orientation):
+        # TODO optimization: process only new walls
         if orientation == CONSTS.WALL_ORIENTATION_VERTICAL:
             self.grid.register_west_wall((x, y))
         elif orientation == CONSTS.WALL_ORIENTATION_HORIZONTAL:
