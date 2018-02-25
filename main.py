@@ -8,10 +8,21 @@ def log(msg):
     print(msg, file=sys.stderr)
 
 
+class Orientation:
+    def __init__(self, as_char, vector):
+        self.as_char, self.vector = as_char, vector
+
+    def __str__(self):
+        return self.as_char
+
+    def __repr__(self):
+        return str(self)
+
+
 class CONSTS:
     WALL_SIZE = 2
-    WALL_ORIENTATION_VERTICAL = 'V'
-    WALL_ORIENTATION_HORIZONTAL = 'H'
+    WALL_ORIENTATION_VERTICAL = Orientation('V', (0, 1))
+    WALL_ORIENTATION_HORIZONTAL = Orientation('H', (1, 0))
 
 
 class DIR:
@@ -44,12 +55,22 @@ class Wall:
     def signature(self):
         return self.x, self.y, self.orientation, self.size
 
+    def __repr__(self):
+        return "Wall: " + str(self.signature())
+
     def __eq__(self, other):
         return self.signature() == other.signature()
 
+    def __hash__(self):
+        return hash(self.signature())
+
     def prevents(self):
-        # TODO: return list of walls that are made impossible by this one
-        pass
+        x, y = self.x, self.y
+        xv, yv = self.orientation.vector
+        prevented = [Wall((x+i*xv, y+i*yv), self.orientation, CONSTS.WALL_SIZE)
+                     for i in range(CONSTS.WALL_SIZE)]
+        return prevented
+
 
 class Node:
     def __init__(self, position):
