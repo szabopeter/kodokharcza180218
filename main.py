@@ -68,7 +68,7 @@ class Wall:
         x, y = self.x, self.y
         xv, yv = self.orientation.vector
         prevented = [Wall((x+i*xv, y+i*yv), self.orientation, CONSTS.WALL_SIZE)
-                     for i in range(CONSTS.WALL_SIZE)]
+                     for i in range(CONSTS.WALL_SIZE + 1)]
         return prevented
 
 
