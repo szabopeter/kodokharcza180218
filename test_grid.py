@@ -69,3 +69,9 @@ class GridTestCase(unittest.TestCase):
         self.assertFalse(grid.is_free(DIR.WEST, (2, 1), (2, 2)))
         self.assertFalse(grid.is_free(DIR.WEST, (2, 2)))
         self.assertTrue(grid.is_free(DIR.WEST, (2, 3)))
+
+    def test_possible_wall_initialization(self):
+        grid = Grid(2, 2)
+        possibles = grid.possible_walls
+        print(possibles)
+        self.fail("wip")

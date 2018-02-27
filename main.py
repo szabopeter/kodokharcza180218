@@ -132,6 +132,25 @@ class Grid:
                         sibling_node = self.nodes[(nx, ny)]
                         this_node.connect_to(sibling_node, direction)
 
+        self.walls = []
+        self.possible_walls = self.all_possible_walls()
+
+    def register_wall(self, wall):
+        if wall in self.walls:
+            return
+
+        self.walls.append(wall)
+        made_impossible = [prevented for prevented in self.possible_walls[wall]]
+        for prevented in made_impossible:
+            del self.possible_walls[prevented]
+
+        if wall.orientation == CONSTS.WALL_ORIENTATION_VERTICAL:
+            self.register_west_wall(wall.position)
+        elif wall.orientation == CONSTS.WALL_ORIENTATION_HORIZONTAL:
+            self.register_north_wall(wall.position)
+        else:
+            raise NotImplemented
+
     def register_west_wall(self, position, size=2):
         x, y = position
         for i in range(size):
@@ -176,15 +195,19 @@ class Grid:
         return None
 
     def all_possible_walls(self):
-        # TODO optimization: keep track of available options
-        # instead of recalculating them all the time
-        result = {}
+        walls = {}
         for y in range(self.h):
             for x in range(self.w):
-                if self.can_build_west_wall((x, y)):
-                    result.append(((x, y), CONSTS.WALL_ORIENTATION_VERTICAL))
-                if self.can_build_north_wall((x, y)):
-                    result.append((x, y), CONSTS.WALL_ORIENTATION_HORIZONTAL)
+                position = (x, y)
+                if self.can_build_west_wall(position):
+                    walls[Wall(position, CONSTS.WALL_ORIENTATION_VERTICAL)] = None
+                if self.can_build_north_wall(position):
+                    walls[Wall(position, CONSTS.WALL_ORIENTATION_HORIZONTAL)] = None
+
+        for w in walls.keys():
+            walls[w] = w.prevents()
+
+        return walls
 
 
 class ScoreGrid:
@@ -245,13 +268,9 @@ class Arena:
         player.x, player.y, player.walls_left = x, y, walls_left
 
     def register_wall(self, x, y, orientation):
-        # TODO optimization: process only new walls
-        if orientation == CONSTS.WALL_ORIENTATION_VERTICAL:
-            self.grid.register_west_wall((x, y))
-        elif orientation == CONSTS.WALL_ORIENTATION_HORIZONTAL:
-            self.grid.register_north_wall((x, y))
-        else:
-            raise NotImplemented
+        wall = Wall((x, y), orientation)
+        self.grid.register_wall(wall)
+        return
 
     def player_move(self, player):
         scoregrid = ScoreGrid(self.grid, player.goal)
