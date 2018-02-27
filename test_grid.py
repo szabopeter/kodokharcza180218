@@ -1,6 +1,6 @@
 import unittest
 
-from main import Grid, Node, DIR
+from main import Grid, Node, DIR, Wall, CONSTS
 
 
 class GridTestCase(unittest.TestCase):
@@ -71,7 +71,13 @@ class GridTestCase(unittest.TestCase):
         self.assertTrue(grid.is_free(DIR.WEST, (2, 3)))
 
     def test_possible_wall_initialization(self):
+        too_small = ((1, 1), (2, 1), (1, 2))
+        for w, h in too_small:
+            self.assertEqual(0, len(Grid(w, h).possible_walls))
+
         grid = Grid(2, 2)
-        possibles = grid.possible_walls
-        print(possibles)
-        self.fail("wip")
+        possibles = grid.possible_walls.keys()
+        self.assertEqual(2, len(possibles))
+
+        self.assertIn(Wall((1, 0), CONSTS.WALL_ORIENTATION_VERTICAL), possibles)
+        self.assertIn(Wall((0, 1), CONSTS.WALL_ORIENTATION_HORIZONTAL), possibles)
