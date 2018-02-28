@@ -115,10 +115,32 @@ class Node:
         return str(self)
 
 
+class Connection:
+    CONNECTED = 1
+    DISCONNECTED = 0
+
+    def __init__(self, node1, node2):
+        # assert connected in (Connection.CONNECTED, Connection.DISCONNECTED)
+        # self.connected = connected
+        self.nodes = (node1, node2)
+        self.nodeset = {node1, node2}
+
+    def signature(self):
+        return self.nodes
+
+    def __hash__(self):
+        return hash(self.signature())
+
+    def __eq__(self, other):
+        return self.nodeset == other.nodeset
+
+
 class Grid:
     def __init__(self, w, h):
-        self.nodes = {}
         self.w, self.h = w, h
+        self.nodes = {}
+        self.connections = {}
+
         for y in range(h):
             for x in range(w):
                 self.nodes[(x, y)] = Node((x, y))
@@ -131,6 +153,8 @@ class Grid:
                     if (nx, ny) in self.nodes:
                         sibling_node = self.nodes[(nx, ny)]
                         this_node.connect_to(sibling_node, direction)
+                        connection = Connection(this_node, sibling_node)
+                        self.connections[connection] = Connection.CONNECTED
 
         self.walls = []
         self.possible_walls = self.all_possible_walls()
@@ -151,15 +175,20 @@ class Grid:
         else:
             raise NotImplemented
 
-    def register_west_wall(self, position, size=2):
+    def register_wall_segments(self, position, direction, size=2):
         x, y = position
+        xo, yo = DIR.offsets[direction]
         for i in range(size):
-            self.nodes[(x, y+i)].disconnect_label(DIR.WEST)
+            this_node = self.nodes[(x + xo * i, y + yo * i)]
+            other_node = this_node.labels[direction]
+            this_node.disconnect_label(direction)
+            self.connections[Connection(this_node, other_node)] = Connection.DISCONNECTED
+
+    def register_west_wall(self, position, size=2):
+        self.register_wall_segments(position, DIR.WEST)
 
     def register_north_wall(self, position, size=2):
-        x, y = position
-        for i in range(size):
-            self.nodes[(x+i, y)].disconnect_label(DIR.NORTH)
+        self.register_wall_segments(position, DIR.NORTH)
 
     def can_pass(self, position, direction):
         return direction in self.nodes[position].labels
@@ -181,6 +210,9 @@ class Grid:
         return self.is_free(DIR.WEST, (x, y), (x, y+1))
 
     def possible_block(self, position, direction):
+        # TODO: use list of possible walls
+        # gen blocking walls, check if possible
+
         x, y = position
         if direction == DIR.EAST:
             if self.can_build_west_wall((x+1, y)):
