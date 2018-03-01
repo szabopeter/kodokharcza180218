@@ -48,7 +48,7 @@ class DIR:
 
 class Wall:
     def __init__(self, position, orientation, size=CONSTS.WALL_SIZE):
-        self.x, self.y = position
+        self.x, self.y = self.position = position
         self.orientation = orientation
         self.size = size
 
@@ -65,7 +65,7 @@ class Wall:
         return hash(self.signature())
 
     def prevents(self):
-        x, y = self.x, self.y
+        x, y = self.position
         xv, yv = self.orientation.vector
         prevented = [Wall((x+i*xv, y+i*yv), self.orientation, CONSTS.WALL_SIZE)
                      for i in range(CONSTS.WALL_SIZE + 1)]
@@ -175,20 +175,20 @@ class Grid:
         else:
             raise NotImplemented
 
-    def register_wall_segments(self, position, direction, size=2):
+    def register_wall_segments(self, position, builddir, walldir, size=2):
         x, y = position
-        xo, yo = DIR.offsets[direction]
+        xo, yo = DIR.offsets[walldir]
         for i in range(size):
             this_node = self.nodes[(x + xo * i, y + yo * i)]
-            other_node = this_node.labels[direction]
-            this_node.disconnect_label(direction)
+            other_node = this_node.labels[builddir]
+            this_node.disconnect_label(builddir)
             self.connections[Connection(this_node, other_node)] = Connection.DISCONNECTED
 
     def register_west_wall(self, position, size=2):
-        self.register_wall_segments(position, DIR.WEST)
+        self.register_wall_segments(position, DIR.WEST, DIR.SOUTH)
 
     def register_north_wall(self, position, size=2):
-        self.register_wall_segments(position, DIR.NORTH)
+        self.register_wall_segments(position, DIR.NORTH, DIR.EAST)
 
     def can_pass(self, position, direction):
         return direction in self.nodes[position].labels
@@ -207,7 +207,7 @@ class Grid:
 
     def can_build_west_wall(self, position):
         x, y = position
-        return self.is_free(DIR.WEST, (x, y), (x, y+1))
+        return self.is_free(DIR.WEST, position, (x, y+1))
 
     def possible_block(self, position, direction):
         # TODO: use list of possible walls
