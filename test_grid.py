@@ -58,17 +58,25 @@ class GridTestCase(unittest.TestCase):
 
     def test_can_build_west_wall(self):
         grid = Grid(7, 5)
-        self.assertTrue(grid.can_build_west_wall((2, 2)))
-        grid.register_west_wall((2,1))
-        self.assertFalse(grid.can_build_west_wall((2, 2)))
+        for i in (0, 1, 2, 3):
+            self.assertTrue(grid.can_build_west_wall((2, i)), "Should be able to build at %s" % i)
+        grid.register_west_wall((2, 1))
+        for i, expected in [(0, False),
+                            (1, False),
+                            (2, False),
+                            (3, True),
+                            ]:
+            actual = grid.can_build_west_wall((2, i))
+            self.assertEqual(actual, expected,
+                             "Got %s at %s instead of the expected %s" % (actual, i, expected))
 
     def test_is_free(self):
         grid = Grid(7, 5)
-        self.assertTrue(grid.is_free(DIR.WEST, (2, 1), (2, 2)))
+        self.assertTrue(grid.is_all_free(DIR.WEST, (2, 1), (2, 2)))
         grid.register_west_wall((2, 1))
-        self.assertFalse(grid.is_free(DIR.WEST, (2, 1), (2, 2)))
-        self.assertFalse(grid.is_free(DIR.WEST, (2, 2)))
-        self.assertTrue(grid.is_free(DIR.WEST, (2, 3)))
+        self.assertFalse(grid.is_all_free(DIR.WEST, (2, 1), (2, 2)))
+        self.assertFalse(grid.is_all_free(DIR.WEST, (2, 2)))
+        self.assertTrue(grid.is_all_free(DIR.WEST, (2, 3)))
 
     def test_possible_wall_initialization(self):
         too_small = ((1, 1), (2, 1), (1, 2))

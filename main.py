@@ -193,7 +193,7 @@ class Grid:
     def can_pass(self, position, direction):
         return direction in self.nodes[position].labels
 
-    def is_free(self, direction, *positions):
+    def is_all_free(self, direction, *positions):
         for position in positions:
             if position not in self.nodes:
                 return False
@@ -203,11 +203,25 @@ class Grid:
 
     def can_build_north_wall(self, position):
         x, y = position
-        return self.is_free(DIR.NORTH, (x, y), (x+1, y))
+        return self.is_all_free(DIR.NORTH, (x, y), (x + 1, y))
 
     def can_build_west_wall(self, position):
         x, y = position
-        return self.is_free(DIR.WEST, position, (x, y+1))
+        return self.is_all_free(DIR.WEST, position, (x, y + 1))
+
+    # def can_block_north_wall(self, position):
+    #     x, y = position
+    #     for i in range(CONSTS.WALL_SIZE):
+    #         if self.can_build_north_wall((x-i, y)):
+    #             return True
+    #     return False
+    #
+    # def can_block_west_wall(self, position):
+    #     x, y = position
+    #     for i in range(CONSTS.WALL_SIZE):
+    #         if self.can_build_west_wall((x, y-i)):
+    #             return True
+    #     return False
 
     def possible_block(self, position, direction):
         # TODO: use list of possible walls
